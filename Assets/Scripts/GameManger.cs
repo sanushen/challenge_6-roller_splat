@@ -8,6 +8,9 @@ public class GameManger : MonoBehaviour
 {
     public static GameManger singleton;
     private GroundPiece[] allGroundPieces;
+
+    public AudioClip levelCompleteSound;
+    private AudioSource audioSource;
     // Start is called before the first frame update
     void Start()
     {
@@ -30,9 +33,19 @@ public class GameManger : MonoBehaviour
         if(singleton == null)
         {
             singleton = this;
-        } else if (singleton != this) {
+            DontDestroyOnLoad(gameObject);  // MOVED INSIDE
+            
+            // ADD THIS: Get or add Audio Source
+            audioSource = GetComponent<AudioSource>();
+            if(audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+                audioSource.playOnAwake = false;
+            }
+        } 
+        else if (singleton != this) 
+        {
             Destroy(gameObject);
-            DontDestroyOnLoad(gameObject);
         }
     }
 
@@ -56,10 +69,23 @@ public class GameManger : MonoBehaviour
             }
         }
 
-        if(isFinished) {
-            //Call next level
-            startNextLevel();
+        if(isFinished) 
+        {
+            // PLAY SOUND BEFORE CHANGING LEVEL
+            if(audioSource != null && levelCompleteSound != null)
+            {
+                audioSource.PlayOneShot(levelCompleteSound, 1.0f);
+            }
+            
+            // Wait a moment before changing level so sound can play
+            StartCoroutine(DelayedLevelChange());
         }
+    }
+
+    private IEnumerator DelayedLevelChange()
+    {
+        yield return new WaitForSeconds(1f); // Wait 1 second for sound to play
+        startNextLevel();
     }
 
     private void startNextLevel()

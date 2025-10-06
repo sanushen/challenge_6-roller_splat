@@ -18,9 +18,16 @@ public class BallController : MonoBehaviour
 
     private Color solveColor;
 
+    public AudioClip hitSound;
+    private AudioSource playerAudio;
+
+    public ParticleSystem wallHitParticles;
+
     // Start is called before the first frame update
     void Start()
     {
+        playerAudio = GetComponent<AudioSource>();
+
         solveColor = Random.ColorHSV(0.5f, 1);
         GetComponent<MeshRenderer>().material.color = solveColor;
     }
@@ -47,6 +54,20 @@ public class BallController : MonoBehaviour
                 isTravelling = false;
                 travelDirection = Vector3.zero;
                 nextCollisionPosition = Vector3.zero;
+                
+                //Hit sound
+                if(playerAudio != null && hitSound != null)
+                {
+                    playerAudio.PlayOneShot(hitSound, 1.0f);
+                }
+
+                //Particles
+                if(wallHitParticles != null)
+                {
+                    ParticleSystem particles = Instantiate(wallHitParticles, transform.position, Quaternion.identity);
+                    particles.Play();
+                    Destroy(particles.gameObject, particles.main.duration);
+                }
             }
         }
 
@@ -61,7 +82,7 @@ public class BallController : MonoBehaviour
             if(swipePosLastFrame != Vector2.zero)
             {
                 currentSwipe = swipePosCurrentFrame - swipePosLastFrame;
-
+                
                 if(currentSwipe.sqrMagnitude < minSwipeRecognition){
                     return;
                 }
@@ -97,11 +118,5 @@ public class BallController : MonoBehaviour
         }
 
         isTravelling = true;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }
